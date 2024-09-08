@@ -3,8 +3,7 @@
 import gym
 import torch
 import numpy as np
-import time
-import math
+
 import random
 from collections import deque
 from params import buffer_size, learning_rate, batch_size
@@ -22,6 +21,7 @@ def main():
     # return
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
+    print(action_dim)
     policy_net = PolicyNetwork(state_dim, action_dim)
      
     # Initialize replay buffer
@@ -31,36 +31,55 @@ def main():
     optimizer = torch.optim.Adam(policy_net.parameters(), lr=learning_rate)
     epsilon = 1.0  # Start with full exploration
     epsilon_min = 0.01
-    epsilon_decay = 0.995  # Decrease exploration over time
+    epsilon_decay = 0.9995  # Decrease exploration over time
     # Loss function
     loss_fn = torch.nn.MSELoss()
     iterations = 0
+
     while True:
-        if iterations > 1000:
+        if iterations > 10000:
             break
         done = False
         reward = None
+        round_len = 0
+        rand = 0
+        network = 0
+        l_a = 0
+        r_a = 0
         while not done:
             env.render()
             if random.random() < epsilon:
                 action = env.action_space.sample()  # Random action for exploration
+                rand += 1
             else:
                 action = policy_net(torch.FloatTensor(state).unsqueeze(0)).argmax().item()
+                # print("Action:", action)
+                network += 1
+                if action == 0:
+                    l_a += 1
+                else:
+                    r_a += 1
             result = env.step(action)
             # print(result)
             
-            x = math.degrees(result[0][2])
-            print("Pole angle:", x)
+            # x = math.degrees(result[0][2])
+            # print("Pole angle:", x)
             next_state, reward, done, _, _ = result  
             replay_buffer.append((state, action, reward, next_state, done))
-            if len(replay_buffer) > batch_size:
+            if len(replay_buffer) > batch_size * 10:
                 train_model(replay_buffer, policy_net, optimizer, loss_fn)
             # time.sleep(0.5)
             state = next_state
-        print("RESTART")
-        time.sleep(1)
+            round_len += 1
+        print("RESTART @ ROUND LENGTH:", round_len)
+        print("Ratio of random actions:", rand/(rand+network))
+        print("Ration of round length to network actions:", round_len/network)
+        print("Ratio of network left actions to right actions:", l_a/r_a)
+        # time.sleep(1)
         iterations += 1
-        epsilon -= epsilon_decay
+        print("Iterations:", iterations)
+        epsilon *= epsilon_decay
+        print("Epsilon:", epsilon)
         if epsilon < epsilon_min:
             epsilon = epsilon_min
         state, _ = env.reset()

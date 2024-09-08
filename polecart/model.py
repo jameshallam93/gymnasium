@@ -2,7 +2,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .params import batch_size, gamma
+from params import batch_size, gamma
 
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim, action_dim):
@@ -33,7 +33,7 @@ def train_model(replay_buffer, policy_net, optimizer, loss_fn):
     print("done batch:", done_batch)
     # Compute Q values for current states
     current_q_values = policy_net(state_batch).gather(1, action_batch.unsqueeze(1)).squeeze(1)
-    print("Current q values:", current_q_values)
+    # print("Current q values:", current_q_values)
     # Compute target Q values using Bellman equation
     with torch.no_grad():
         # If done, the future Q-value is 0 (no more rewards after termination)
