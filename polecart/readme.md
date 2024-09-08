@@ -1,3 +1,5 @@
+![cartpole_gif](./cartpole.gif)
+
 
 # Setup
 Ensure you are using poetry 1.3.2 and python 311.
