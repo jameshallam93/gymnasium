@@ -6,12 +6,12 @@ import numpy as np
 
 import random
 from collections import deque
-from params import buffer_size, learning_rate, batch_size
-from model import PolicyNetwork, train_model
+from params import buffer_size, learning_rate, batch_size, save_interval, policy_net_path
+from model import PolicyNetwork, train_model, save_model
 
 # Create the CartPole environment
 def main():
-    env = gym.make('CartPole-v1', render_mode="human")
+    env = gym.make('CartPole-v1',) #render_mode="human")
     env = gym.wrappers.TimeLimit(env, max_episode_steps=10000)
     print("Env created")
     # print(env)
@@ -21,7 +21,6 @@ def main():
     # return
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
-    print(action_dim)
     policy_net = PolicyNetwork(state_dim, action_dim)
      
     # Initialize replay buffer
@@ -36,8 +35,9 @@ def main():
     loss_fn = torch.nn.MSELoss()
     iterations = 0
 
+    average_round_len = 0
     while True:
-        if iterations > 10000:
+        if iterations > 100000000:
             break
         done = False
         reward = None
@@ -71,15 +71,20 @@ def main():
             # time.sleep(0.5)
             state = next_state
             round_len += 1
-        print("RESTART @ ROUND LENGTH:", round_len)
-        print("Ratio of random actions:", rand/(rand+network))
-        print("Ration of round length to network actions:", round_len/network)
-        print("Ratio of network left actions to right actions:", l_a/r_a)
         # time.sleep(1)
+        if iterations == 0:
+            average_round_len = round_len
+        else:
+            average_round_len = (average_round_len + ((round_len - average_round_len) / (iterations + 1)))
         iterations += 1
-        print("Iterations:", iterations)
+        if iterations > 10000 and iterations % save_interval == 0:
+            save_model(policy_net, f"saved_models/{policy_net_path}")
+            print("Average round length:", average_round_len)
+            print("Epsilon:", epsilon)
+            print("Iterations:", iterations)
+            print("Left actions:", l_a)
+            print("Right actions:", r_a)
         epsilon *= epsilon_decay
-        print("Epsilon:", epsilon)
         if epsilon < epsilon_min:
             epsilon = epsilon_min
         state, _ = env.reset()
