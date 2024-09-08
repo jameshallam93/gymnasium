@@ -9,7 +9,7 @@ def setup_env(train):
     if not train:
         kwargs["render_mode"] = "human"
     env = gym.make("CartPole-v1", **kwargs)
-    env = gym.wrappers.TimeLimit(env, max_episode_steps=10000)
+    env = gym.wrappers.TimeLimit(env, max_episode_steps=500)
     print("Env created")
     return env
 
