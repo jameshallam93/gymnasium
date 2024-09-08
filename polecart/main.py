@@ -15,6 +15,18 @@ from reporting import Reporting
 from epsilon import Epsilon
 
 
+"""
+An attempt at a DQN implementation for the CartPole environment.
+Usage:
+    poetry run python main.py --train
+    poetry run python main.py --load <model_name> --train [--report]
+    poetry run python main.py --load <model_name>
+
+Will output a model file to saved_models/ with the current date and time if training is stopped,
+as well as every 1000 iterations (configurable in params.py).
+
+"""
+
 def main(load=False, train=True, report=False):
     env = setup_env(train)
     state = reset_env(env)
