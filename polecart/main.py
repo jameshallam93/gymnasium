@@ -1,6 +1,6 @@
 import torch
 from argparse import ArgumentParser
-
+import math
 import datetime
 from collections import deque
 from params import (
@@ -26,6 +26,9 @@ Will output a model file to saved_models/ with the current date and time if trai
 as well as every 1000 iterations (configurable in params.py).
 
 """
+
+def get_reward(degrees):
+    return max(0, 1 - (abs(degrees) / 12))
 
 def main(load=False, train=True, report=False):
     env = setup_env(train)
@@ -58,6 +61,9 @@ def main(load=False, train=True, report=False):
                     action = get_action(env, policy_net, state, reporting)
                     result = env.step(action)
                     next_state, reward, done, _, _ = result
+                    angle_rads = next_state[2]
+                    degrees = math.degrees(angle_rads)
+                    reward = get_reward(degrees)
                     replay_buffer.append((state, action, reward, next_state, done))
 
                     if len(replay_buffer) > batch_size * 10:
@@ -80,7 +86,7 @@ def main(load=False, train=True, report=False):
             t = datetime.datetime.now()
             save_model(
                 policy_net,
-                f"saved_models/{t.strftime('%d-%m-%Y_%H-%M-%S')}_{iterations}_final_{policy_net_path}",
+                f"saved_models/{t.strftime('%d-%m-%Y_%H-%M-%S')}_{iterations}_finalwithnewreward_{policy_net_path}",
             )
             env.close()
 
